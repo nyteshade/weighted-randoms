@@ -1,0 +1,27 @@
+{
+  "name": "weighted-randoms",
+  "version": "1.0.0",
+  "description": "A simple lightweight class designed for working with weighted randoms",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "babel src --out-dir dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nyteshade/weighted-randoms.git"
+  },
+  "author": "Brielle Harrison <nyteshade@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nyteshade/weighted-randoms/issues"
+  },
+  "homepage": "https://github.com/nyteshade/weighted-randoms#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-rc.2",
+    "@babel/core": "^7.0.0-rc.2",
+    "@babel/plugin-proposal-class-properties": "^7.0.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.0.0-rc.2",
+    "@babel/preset-env": "^7.0.0-rc.2"
+  }
+}
