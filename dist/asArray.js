@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.provideGetter = provideGetter;
 exports.asArray = asArray;
-exports.default = exports.reverseNumericSort = exports.numericSort = exports.isNumber = void 0;
+exports["default"] = exports.reverseNumericSort = exports.numericSort = exports.isNumber = void 0;
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -91,35 +91,34 @@ exports.reverseNumericSort = reverseNumericSort;
 var SortOptions = {
   ASCENDING: 1,
   DESCENDING: -1
-  /**
-   * This function takes an object that has numeric keys and from that
-   * object, in order, creates a normally index'ed array. So given an
-   * object such as:
-   * ```
-   * let object = { '-23': 'c', 5: 'a', 123: 't' }
-   * ```
-   *
-   * You can invoke `asArray()` and get the following
-   *
-   * ```
-   * asArray(object) // [ 'c', 'a', 't' ]
-   * ```
-   *
-   * Calling asArray() does not mutate the object supplied. Rather a
-   * Proxy instance is created to wrap it and allow for the conversion to
-   * a bonafide array.
-   *
-   * @param {Object} object any JavaScript object that can be iterated over
-   * that contains at least a property that is a finite value (i.e. number)
-   * @param {number} direction if `SortOptions.ASCENDING` or 1 is supplied,
-   * which is the default, keys with a lower numeric value will be earlier
-   * in the generated array. If `SortOptions.DESCENDING` or -1 is supplied,
-   * the opposite will occur.
-   * @return an actual array instance with all previous finite values
-   * appearing in numerical order in the returned array.
-   */
-
 };
+/**
+ * This function takes an object that has numeric keys and from that
+ * object, in order, creates a normally index'ed array. So given an
+ * object such as:
+ * ```
+ * let object = { '-23': 'c', 5: 'a', 123: 't' }
+ * ```
+ *
+ * You can invoke `asArray()` and get the following
+ *
+ * ```
+ * asArray(object) // [ 'c', 'a', 't' ]
+ * ```
+ *
+ * Calling asArray() does not mutate the object supplied. Rather a
+ * Proxy instance is created to wrap it and allow for the conversion to
+ * a bonafide array.
+ *
+ * @param {Object} object any JavaScript object that can be iterated over
+ * that contains at least a property that is a finite value (i.e. number)
+ * @param {number} direction if `SortOptions.ASCENDING` or 1 is supplied,
+ * which is the default, keys with a lower numeric value will be earlier
+ * in the generated array. If `SortOptions.DESCENDING` or -1 is supplied,
+ * the opposite will occur.
+ * @return an actual array instance with all previous finite values
+ * appearing in numerical order in the returned array.
+ */
 
 function asArray(object) {
   var direction = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : SortOptions.ASCENDING;
@@ -191,4 +190,4 @@ function provideGetter(to) {
 
 /** Export the primary function as the default behavior */
 var _default = asArray;
-exports.default = _default;
+exports["default"] = _default;
