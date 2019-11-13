@@ -177,10 +177,11 @@ class Random {
   one() {
     let index = Math.random() * this.size
     let count = 0
+    let toString = obj => Object.prototype.toString.apply(obj)
 
     for (let item of this.list) {
       if (index < (item.weight + count)) {
-        if (/\[object Function\]/.test(({}).toString.apply(item.value))) {
+        if (/\[object Function\]/.test(toString(item.value))) {
           return item.value()
         }
 

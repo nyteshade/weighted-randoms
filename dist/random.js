@@ -209,6 +209,11 @@ function () {
     value: function one() {
       var index = Math.random() * this.size;
       var count = 0;
+
+      var toString = function toString(obj) {
+        return Object.prototype.toString.apply(obj);
+      };
+
       var _iteratorNormalCompletion2 = true;
       var _didIteratorError2 = false;
       var _iteratorError2 = undefined;
@@ -218,7 +223,7 @@ function () {
           var item = _step2.value;
 
           if (index < item.weight + count) {
-            if (/\[object Function\]/.test({}.toString.apply(item.value))) {
+            if (/\[object Function\]/.test(toString(item.value))) {
               return item.value();
             }
 
