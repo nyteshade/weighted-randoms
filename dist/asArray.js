@@ -3,11 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.provideGetter = provideGetter;
 exports.asArray = asArray;
-exports["default"] = exports.reverseNumericSort = exports.numericSort = exports.isNumber = void 0;
+exports.numericSort = exports.isNumber = exports["default"] = void 0;
+exports.provideGetter = provideGetter;
+exports.reverseNumericSort = void 0;
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 /**
  * If the value supplied is actually a number, basically finite values that
@@ -174,7 +175,7 @@ function provideGetter(to) {
 
   contents = contents || '(arguments[0])';
 
-  if (!force && (to === null || to === void 0 ? void 0 : to.prototype)) {
+  if (!force && to !== null && to !== void 0 && to.prototype) {
     target = to.prototype;
     contents = '(this)';
   }

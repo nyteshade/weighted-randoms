@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = exports.ObjectPath = exports.compress = exports.expand = exports.getVal = void 0;
+exports.getVal = exports.expand = exports["default"] = exports.compress = exports.ObjectPath = void 0;
 
 var _fnOrVal = require("./fnOrVal");
 
@@ -13,10 +13,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+/**
+ * A way of, without using `eval` to reach deeply into an object in
+ * search of a value.
+ * 
+ * @param {string} path a typical object path portion found after the
+ * dot or brackets used in coding; if you are tring to access the 
+ * value of `object.prop.array[3]` you would specify either one of
+ * `prop.array[3]` or `prop.array.3`. Both of which would work
+ * @param {Object} object the object that will be checked for a given
+ * value
+ */
 var getVal = function getVal(path, object) {
   return compress(expand(path)).split('.').reduce(function (xs, x) {
     return xs && xs[x] ? xs[x] : null;
@@ -63,9 +74,7 @@ var compress = function compress(path) {
 exports.compress = compress;
 _Symbol$toStringTag = Symbol.toStringTag;
 
-var ObjectPath =
-/*#__PURE__*/
-function () {
+var ObjectPath = /*#__PURE__*/function () {
   /**
    * Creates a new `ObjectPath` object that describes how an object will 
    * be accessed. 
