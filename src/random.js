@@ -139,8 +139,9 @@ class Random {
       throw new Error('Number ranges must be numeric')
     }
 
+    const asc = Number(from) < Number(to)
+
     let Class = this.constructor
-    let asc = Number(from) < Number(to)
     let tags = [GEN_RANGE(from, to)]
 
     if (withWeight === null) {
@@ -170,6 +171,10 @@ class Random {
    * Randomly select a value from the internal list, taking into account
    * any weights when generating the random occurrence.
    *
+   * @param {function} postProcess if a function is supplied here, it is
+   * expected to be of the signature function(result):result. It allows you
+   * to process the result by acting on it and returning the subsequent 
+   * value.
    * @return {mixed} the value of the randomly, possibly randomly weighted,
    * generated item. If the item's `value` property is a function, the
    * result of that function is returned instead.
@@ -178,14 +183,31 @@ class Random {
     let index = Math.random() * this.size
     let count = 0
     let toString = obj => Object.prototype.toString.apply(obj)
+    let isFunction = obj => /object Function/.test(toString(obj))
 
     for (let item of this.list) {
       if (index < (item.weight + count)) {
-        if (/\[object Function\]/.test(toString(item.value))) {
-          return item.value()
+        let result = item.value
+
+        if (item.next && item.next instanceof Random) {
+          result = item.next
+        } 
+
+        if (isFunction(result)) {
+          result = result()
         }
 
-        return item.value
+        while (result && result instanceof Random) {
+          result = result.one()
+        }
+
+        let postProcess = item.postProcess
+
+        if (postProcess && isFunction(postProcess)) {
+          result = postProcess(result)
+        }
+
+        return result
       }
       count += item.weight
     }
@@ -382,11 +404,9 @@ class Random {
    */
   static keys(count = 1, ...objects) {
     const bag = new Random(...objects)
-    const items = bag.some(count).map(
+    return bag.some(count).map(
       item => Random.one(Object.keys(item || {}))
     )
-
-    return items
   }
 
   /**
@@ -403,14 +423,12 @@ class Random {
    */
   static values(count = 1, ...objects) {
     const bag = new Random(...objects)
-    const items = bag.some(count).map(item => {
+    return bag.some(count).map(item => {
       const key = Random.one(Object.keys(item || {}))
       const val = item[key]
 
       return val
     })
-
-    return items
   }
 
   /**
@@ -427,14 +445,12 @@ class Random {
    */
   static entries(count = 1, ...objects) {
     const bag = new Random(...objects)
-    const items = bag.some(count).map(item => {
+    return bag.some(count).map(item => {
       const key = Random.one(Object.keys(item || {}))
       const val = item[key]
 
       return [key, val]
     })
-
-    return items
   }
 
   /**
@@ -522,6 +538,17 @@ class Random {
     return list
   }
 
+  /**
+   * Ensure that instances of Random report themselves as instances
+   * of class Random. Testing this is as easy as matching the name 
+   * of this class to the results of a call to Object.prototype.
+   * toString.call() and passing this instance as the first parameter.
+   * 
+   * @return {string} the name of the Class this function is part of
+   */
+  get [Symbol.toStringTag]() {
+    return this.constructor.name
+  }
 
   static usingItem(itemClass) {
     if (~itemClass?.prototype instanceof Item) {
@@ -566,6 +593,7 @@ module.exports = {
   Random,
   isNumber,
   numericSort,
+  provideGetter,
 
   STD_WEIGHT,
   DEF_STD_WEIGHT,

@@ -1,11 +1,12 @@
 {
   "name": "weighted-randoms",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A simple lightweight class designed for working with weighted randoms",
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
-    "build": "babel src --out-dir dist && parcel build dist/index.js --out-dir web"
+    "build": "babel src --out-dir dist && parcel build dist/index.js --out-dir web",
+    "repl": "node ./repl.sh"
   },
   "repository": {
     "type": "git",

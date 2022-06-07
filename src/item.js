@@ -1,7 +1,14 @@
 import { DEF_STD_WEIGHT, STD_WEIGHT, Random } from './random'
 
 export class Item {
-  constructor(value = 1, weight = DEF_STD_WEIGHT, tags = [], force = false) {
+  constructor(
+    value = 1, 
+    weight = DEF_STD_WEIGHT, 
+    tags = [], 
+    force = false, 
+    next = null, 
+    postProcess = null
+  ) {
     if (
       typeof value === 'object' &&
       typeof value.value !== 'undefined' &&
@@ -15,7 +22,7 @@ export class Item {
       tags.push(STD_WEIGHT)
     }
 
-    Object.assign(this, { value, weight, tags })
+    Object.assign(this, { value, weight, tags, next, postProcess })
   }
 
   /**
@@ -33,6 +40,26 @@ export class Item {
   static from(...args) {
     return new Item(...args)
   }
+
+  /**
+   * This value, if an instance of `Random` will cause `next.one()` to be
+   * called if this item is selected. This is a method that allows one
+   * choice to trigger another choice.
+   * 
+   * @type {Random}
+   */
+  next = null
+
+  /**
+   * If the item in question has a `postProcess` property and that property
+   * is a function, then after all processing, including subsequently
+   * triggered choices due to the presence of `next` properties, are all done,
+   * then `postProcess(value)` is invoked. The result is then returned instead
+   * of `.value` from this item.
+   * 
+   * @type {function}
+   */
+  postProcess = null
 
   /**
    * The value property is any type of JavaScript value, if this property

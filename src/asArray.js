@@ -8,7 +8,7 @@
  * @return {Boolean} true if the value is not `NaN` and can be parsed as
  * a float
  */
-const isNumber = (value) => !Number.isNaN(parseFloat(value)) && isFinite(value)
+export const isNumber = (value) => !Number.isNaN(parseFloat(value)) && isFinite(value)
 
 /**
  * The `sort` method on `Array` instances sorts alphabetically rather than
@@ -27,7 +27,7 @@ const isNumber = (value) => !Number.isNaN(parseFloat(value)) && isFinite(value)
  *
  * @throws an error if both a and b are not finite values.
  */
-const numericSort = (a,b) => {
+export const numericSort = (a,b) => {
   if (!isNumber(a) || !isNumber(b)) {
     throw new Error("numericSort should only be used on numbers")
   }
@@ -49,7 +49,7 @@ const numericSort = (a,b) => {
  * typically, subsequent parameters are ignored by `Array.sort()`
  * @return {number} -1, 0, or 1 as is expected for a sort routine
  */
-const reverseNumericSort = (...args) => {
+export const reverseNumericSort = (...args) => {
   return -1 * numericSort(...args)
 }
 
@@ -58,7 +58,7 @@ const reverseNumericSort = (...args) => {
  * to `asArray()` in order to determine how to sort the numeric keys
  * of the supplied array.
  */
-const SortOptions = {
+export const SortOptions = {
   ASCENDING: 1,
   DESCENDING: -1,
 }
@@ -90,7 +90,7 @@ const SortOptions = {
  * @return an actual array instance with all previous finite values
  * appearing in numerical order in the returned array.
  */
-function asArray(object, direction = SortOptions.ASCENDING) {
+export function asArray(object, direction = SortOptions.ASCENDING) {
   let finiteKeys = Object.keys(object)
     .filter(key => isFinite(key))
     .map(num => Number(num))
@@ -130,7 +130,7 @@ function asArray(object, direction = SortOptions.ASCENDING) {
  * Adds a `asArray` getter to the object in question. If the object
  * supplied is a function or class, its instances will bear the new
  * getter property. If the supplied object does not have a `prototype`
- * property, then the geter is applied directly to the object supplied
+ * property, then the getter is applied directly to the object supplied
  *
  * @method provideGetter
  *
@@ -141,7 +141,7 @@ function asArray(object, direction = SortOptions.ASCENDING) {
  * @param {boolean} force if true, no autodetection of function or class
  * takes place and the resulting getter is blindly applied to the target
  */
-function provideGetter(to, as = 'asArray', force = false, contents) {
+export function provideGetter(to, as = 'asArray', force = false, contents) {
   let target = to
 
   // Set proper defaults
@@ -158,9 +158,6 @@ function provideGetter(to, as = 'asArray', force = false, contents) {
     }
   })
 }
-
-/** Export each function separately */
-export { isNumber, numericSort, reverseNumericSort, provideGetter, asArray }
 
 /** Export the primary function as the default behavior */
 export default asArray

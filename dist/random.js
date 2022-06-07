@@ -42,7 +42,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * Random is quick class that expertly handles weighted randoms in your code
  * in an efficient way. It supports objects that sport
  */
-var Random = /*#__PURE__*/function () {
+var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
   /**
    * Creates a new instance of Random which can be used to generate a random
    * selection from the choices it is aware of. Each choice can be weighted
@@ -217,8 +217,8 @@ var Random = /*#__PURE__*/function () {
         throw new Error('Number ranges must be numeric');
       }
 
-      var Class = this.constructor;
       var asc = Number(from) < Number(to);
+      var Class = this.constructor;
       var tags = [GEN_RANGE(from, to)];
 
       if (withWeight === null) {
@@ -245,6 +245,10 @@ var Random = /*#__PURE__*/function () {
      * Randomly select a value from the internal list, taking into account
      * any weights when generating the random occurrence.
      *
+     * @param {function} postProcess if a function is supplied here, it is
+     * expected to be of the signature function(result):result. It allows you
+     * to process the result by acting on it and returning the subsequent 
+     * value.
      * @return {mixed} the value of the randomly, possibly randomly weighted,
      * generated item. If the item's `value` property is a function, the
      * result of that function is returned instead.
@@ -260,6 +264,10 @@ var Random = /*#__PURE__*/function () {
         return Object.prototype.toString.apply(obj);
       };
 
+      var isFunction = function isFunction(obj) {
+        return /object Function/.test(toString(obj));
+      };
+
       var _iterator3 = _createForOfIteratorHelper(this.list),
           _step3;
 
@@ -268,11 +276,27 @@ var Random = /*#__PURE__*/function () {
           var item = _step3.value;
 
           if (index < item.weight + count) {
-            if (/\[object Function\]/.test(toString(item.value))) {
-              return item.value();
+            var result = item.value;
+
+            if (item.next && item.next instanceof Random) {
+              result = item.next;
             }
 
-            return item.value;
+            if (isFunction(result)) {
+              result = result();
+            }
+
+            while (result && result instanceof Random) {
+              result = result.one();
+            }
+
+            var postProcess = item.postProcess;
+
+            if (postProcess && isFunction(postProcess)) {
+              result = postProcess(result);
+            }
+
+            return result;
           }
 
           count += item.weight;
@@ -323,6 +347,20 @@ var Random = /*#__PURE__*/function () {
      * weight used by the system.
      */
 
+  }, {
+    key: _Symbol$toStringTag,
+    get:
+    /**
+     * Ensure that instances of Random report themselves as instances
+     * of class Random. Testing this is as easy as matching the name 
+     * of this class to the results of a call to Object.prototype.
+     * toString.call() and passing this instance as the first parameter.
+     * 
+     * @return {string} the name of the Class this function is part of
+     */
+    function get() {
+      return this.constructor.name;
+    }
   }], [{
     key: "item",
     value: function item() {
@@ -522,10 +560,9 @@ var Random = /*#__PURE__*/function () {
 
       var bag = _construct(Random, objects);
 
-      var items = bag.some(count).map(function (item) {
+      return bag.some(count).map(function (item) {
         return Random.one(Object.keys(item || {}));
       });
-      return items;
     }
     /**
      * Rather than choosing a value from the supplied list, for each value
@@ -551,12 +588,11 @@ var Random = /*#__PURE__*/function () {
 
       var bag = _construct(Random, objects);
 
-      var items = bag.some(count).map(function (item) {
+      return bag.some(count).map(function (item) {
         var key = Random.one(Object.keys(item || {}));
         var val = item[key];
         return val;
       });
-      return items;
     }
     /**
      * Rather than choosing a value from the supplied list, for each value
@@ -582,12 +618,11 @@ var Random = /*#__PURE__*/function () {
 
       var bag = _construct(Random, objects);
 
-      var items = bag.some(count).map(function (item) {
+      return bag.some(count).map(function (item) {
         var key = Random.one(Object.keys(item || {}));
         var val = item[key];
         return [key, val];
       });
-      return items;
     }
     /**
      * Some effort has gone into parsing the supplied values to be smart about
@@ -691,7 +726,7 @@ var Random = /*#__PURE__*/function () {
   }]);
 
   return Random;
-}();
+}(Symbol.toStringTag);
 /** Standard default weight value used through code for new items */
 
 
@@ -725,6 +760,7 @@ module.exports = {
   Random: Random,
   isNumber: _asArray.isNumber,
   numericSort: _asArray.numericSort,
+  provideGetter: _asArray.provideGetter,
   STD_WEIGHT: STD_WEIGHT,
   DEF_STD_WEIGHT: DEF_STD_WEIGHT,
   GEN_RANGE: GEN_RANGE,

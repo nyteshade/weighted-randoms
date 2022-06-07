@@ -29,8 +29,14 @@ var Item = /*#__PURE__*/function () {
     var weight = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _random.DEF_STD_WEIGHT;
     var tags = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
     var force = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    var next = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
+    var postProcess = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
 
     _classCallCheck(this, Item);
+
+    _defineProperty(this, "next", null);
+
+    _defineProperty(this, "postProcess", null);
 
     _defineProperty(this, "value", null);
 
@@ -49,7 +55,9 @@ var Item = /*#__PURE__*/function () {
     Object.assign(this, {
       value: value,
       weight: weight,
-      tags: tags
+      tags: tags,
+      next: next,
+      postProcess: postProcess
     });
   }
   /**
@@ -76,11 +84,11 @@ var Item = /*#__PURE__*/function () {
       return _construct(Item, args);
     }
     /**
-     * The value property is any type of JavaScript value, if this property
-     * yields a function, the resulting value from the function's execution
-     * is used when employed with `Random` instances.
-     *
-     * @type {mixed}
+     * This value, if an instance of `Random` will cause `next.one()` to be
+     * called if this item is selected. This is a method that allows one
+     * choice to trigger another choice.
+     * 
+     * @type {Random}
      */
 
   }]);

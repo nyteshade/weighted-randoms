@@ -3,6 +3,14 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+var _exportNames = {
+  Item: true,
+  Random: true,
+  STD_WEIGHT: true,
+  DEF_STD_WEIGHT: true,
+  GEN_RANGE: true,
+  GEN_RANGE_VALS: true
+};
 Object.defineProperty(exports, "DEF_STD_WEIGHT", {
   enumerable: true,
   get: function get() {
@@ -39,19 +47,35 @@ Object.defineProperty(exports, "STD_WEIGHT", {
     return _random.STD_WEIGHT;
   }
 });
-Object.defineProperty(exports, "isNumber", {
-  enumerable: true,
-  get: function get() {
-    return _random.isNumber;
-  }
-});
-Object.defineProperty(exports, "numericSort", {
-  enumerable: true,
-  get: function get() {
-    return _random.numericSort;
-  }
-});
 
 var _item = require("./item");
+
+var _asArray = require("./asArray");
+
+Object.keys(_asArray).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _asArray[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _asArray[key];
+    }
+  });
+});
+
+var _DnDBasicRulesMagic = require("./examples/DnDBasicRulesMagic");
+
+Object.keys(_DnDBasicRulesMagic).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _DnDBasicRulesMagic[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _DnDBasicRulesMagic[key];
+    }
+  });
+});
 
 var _random = require("./random");

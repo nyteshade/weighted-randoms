@@ -1,9 +1,9 @@
 export { Item } from './item'
+export * from './asArray'
+export * from './examples/DnDBasicRulesMagic'
 
 export {
   Random,
-  isNumber,
-  numericSort,
 
   STD_WEIGHT,
   DEF_STD_WEIGHT,

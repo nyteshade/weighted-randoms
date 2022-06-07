@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.SortOptions = void 0;
 exports.asArray = asArray;
 exports.numericSort = exports.isNumber = exports["default"] = void 0;
 exports.provideGetter = provideGetter;
@@ -121,6 +122,8 @@ var SortOptions = {
  * appearing in numerical order in the returned array.
  */
 
+exports.SortOptions = SortOptions;
+
 function asArray(object) {
   var direction = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : SortOptions.ASCENDING;
   var finiteKeys = Object.keys(object).filter(function (key) {
@@ -154,7 +157,7 @@ function asArray(object) {
  * Adds a `asArray` getter to the object in question. If the object
  * supplied is a function or class, its instances will bear the new
  * getter property. If the supplied object does not have a `prototype`
- * property, then the geter is applied directly to the object supplied
+ * property, then the getter is applied directly to the object supplied
  *
  * @method provideGetter
  *
@@ -186,9 +189,8 @@ function provideGetter(to) {
     }
   });
 }
-/** Export each function separately */
-
-
 /** Export the primary function as the default behavior */
+
+
 var _default = asArray;
 exports["default"] = _default;
