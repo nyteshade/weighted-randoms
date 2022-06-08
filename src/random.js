@@ -4,6 +4,7 @@ import { parse } from 'csv-parse'
 import FS from 'fs'
 import Path from 'path'
 import { promisify } from 'util'
+import { string } from 'yargs'
 
 /**
  * Random is quick class that expertly handles weighted randoms in your code
@@ -297,6 +298,11 @@ export class Random {
     }
     
     if (FS.existsSync(pathToFile)) {
+      const tryParse = (string) => {
+        try { return JSON.parse(string) }
+        catch(ignored) { return null }
+      }
+
       // Read the contents of the specified CSV file and parse
       // the CSV into an array of records
       let contents = await promisify(FS.readFile)(pathToFile)
@@ -313,6 +319,7 @@ export class Random {
       // Fetch the value indices
       let stringValueIndex = columnData.indexOf(COL_VALUE_STRING)
       let jsonValueIndex = columnData.indexOf(COL_VALUE_JSON)
+      let mixedValueIndex = columnData.indexOf(COL_VALUE_MIXED)
 
       // Fetch the tag indices
       let csvTagIndex = columnData.indexOf(COL_TAGS_CSV)
@@ -324,19 +331,31 @@ export class Random {
 
       // Normalize the indicies based on searched data
       let weightIndex = columnData.indexOf(COL_WEIGHT)
-      let valueIndex = ~stringValueIndex ? stringValueIndex : jsonValueIndex
+      let valueIndex = ~stringValueIndex 
+        ? stringValueIndex 
+        : (~mixedValueIndex ? mixedValueIndex : jsonValueIndex)
       let tagIndex = ~csvTagIndex 
         ? csvTagIndex 
         : (~singleTagIndex ? singleTagIndex : -1)
       let nextIndex = ~nextFileIndex ? nextFileIndex : nextJSONIndex
 
       records = await Promise.all(records.map(async (record) => {
-        let value = ~valueIndex
-          ? (~jsonValueIndex 
-              ? JSON.parse(record[valueIndex]) 
-              : record[valueIndex]
-            )
-          : 'N/A Value'
+        let value 
+        if (~valueIndex) {
+          switch (valueIndex) {
+            case jsonValueIndex:
+              value = tryParse(record[valueIndex]) || null 
+              break 
+
+            case mixedValueIndex:
+              value = tryParse(record[valueIndex]) || record[valueIndex]
+              break
+
+            default:
+            case stringValueIndex:
+              value = record[valueIndex]              
+          }
+        }
 
         let tags = ~tagIndex
           ? (~csvTagIndex
@@ -709,6 +728,9 @@ export const COL_VALUE_STRING = Symbol('Column represents string values')
 /** Indicates the column in question is a JSON string to be constructed */
 export const COL_VALUE_JSON = Symbol('Column represents parseable JSON')
 
+/** Indicates the column in question is either JSON or a raw String */
+export const COL_VALUE_MIXED = Symbol('Column represents string or JSON value')
+
 /** Indicates the column in question is a CSV string of tags to apply */
 export const COL_TAGS_CSV = Symbol('Column represents CSV as string tag names')
 
@@ -724,20 +746,16 @@ export const COL_NEXT_FILEPATH = Symbol(
 )
 
 /** Default set of columns for use with Random.fromCSV() */
-export const COLS_DEFAULT = [ COL_WEIGHT, COL_VALUE_STRING, COL_TAGS_CSV ]
+export const COLS_DEFAULT = [ COL_WEIGHT, COL_VALUE_MIXED, COL_TAGS_CSV ]
 
 /** Default set of columns for nested tables when using Random.fromCSV() */
-export const COLS_NESTED = [ COL_WEIGHT, COL_VALUE_STRING, COL_NEXT_FILEPATH ]
+export const COLS_NESTED = [ COL_WEIGHT, COL_VALUE_MIXED, COL_NEXT_FILEPATH ]
 
-/** 
- * Default set of columns for nested tables and complex values for use
- * with Random.fromCSV()
- */
-export const COLS_NESTED_OBJ = [ 
-  COL_WEIGHT, 
-  COL_VALUE_JSON, 
-  COL_NEXT_FILEPATH 
-]
+/** Set of columns with strict string values */
+export const COLS_STRING_VALUES = [ COL_WEIGHT, COL_VALUE_STRING, COL_TAGS_CSV ]
+
+/** Set of columns with strict JSON only values */
+export const COLS_JSON_VALUES = [ COL_WEIGHT, COL_VALUE_JSON, COL_TAGS_CSV ]
 
 /** 
  * Indicates the column in question is a JSON string to be constructed 

@@ -5,7 +5,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.STD_WEIGHT = exports.Random = exports.GEN_RANGE_VALS = exports.GEN_RANGE = exports.DEF_STD_WEIGHT = exports.COL_WEIGHT = exports.COL_VALUE_STRING = exports.COL_VALUE_JSON = exports.COL_TAG_STRING = exports.COL_TAGS_CSV = exports.COL_NEXT_JSON = exports.COL_NEXT_FILEPATH = exports.COLS_NESTED_OBJ = exports.COLS_NESTED = exports.COLS_DEFAULT = void 0;
+exports.STD_WEIGHT = exports.Random = exports.GEN_RANGE_VALS = exports.GEN_RANGE = exports.DEF_STD_WEIGHT = exports.COL_WEIGHT = exports.COL_VALUE_STRING = exports.COL_VALUE_MIXED = exports.COL_VALUE_JSON = exports.COL_TAG_STRING = exports.COL_TAGS_CSV = exports.COL_NEXT_JSON = exports.COL_NEXT_FILEPATH = exports.COLS_STRING_VALUES = exports.COLS_NESTED = exports.COLS_JSON_VALUES = exports.COLS_DEFAULT = void 0;
 
 var _item2 = require("./item");
 
@@ -18,6 +18,8 @@ var _fs = _interopRequireDefault(require("fs"));
 var _path = _interopRequireDefault(require("path"));
 
 var _util = require("util");
+
+var _yargs = require("yargs");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -434,10 +436,12 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
             nextColumnData,
             skipFirstLine,
             options,
+            tryParse,
             contents,
             records,
             stringValueIndex,
             jsonValueIndex,
+            mixedValueIndex,
             csvTagIndex,
             singleTagIndex,
             nextFileIndex,
@@ -462,41 +466,52 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                 };
 
                 if (!_fs["default"].existsSync(pathToFile)) {
-                  _context2.next = 32;
+                  _context2.next = 34;
                   break;
                 }
 
-                _context2.next = 7;
+                tryParse = function tryParse(string) {
+                  try {
+                    return JSON.parse(string);
+                  } catch (ignored) {
+                    return null;
+                  }
+                }; // Read the contents of the specified CSV file and parse
+                // the CSV into an array of records
+
+
+                _context2.next = 8;
                 return (0, _util.promisify)(_fs["default"].readFile)(pathToFile);
 
-              case 7:
+              case 8:
                 contents = _context2.sent;
-                _context2.prev = 8;
-                _context2.next = 11;
+                _context2.prev = 9;
+                _context2.next = 12;
                 return (0, _util.promisify)(_csvParse.parse)(contents, options);
 
-              case 11:
+              case 12:
                 records = _context2.sent;
-                _context2.next = 16;
+                _context2.next = 17;
                 break;
 
-              case 14:
-                _context2.prev = 14;
-                _context2.t0 = _context2["catch"](8);
+              case 15:
+                _context2.prev = 15;
+                _context2.t0 = _context2["catch"](9);
 
-              case 16:
+              case 17:
                 if (records) {
-                  _context2.next = 18;
+                  _context2.next = 19;
                   break;
                 }
 
                 return _context2.abrupt("return", null);
 
-              case 18:
+              case 19:
                 // Determine which columns were specified for values, tags and weight
                 // Fetch the value indices
                 stringValueIndex = columnData.indexOf(COL_VALUE_STRING);
-                jsonValueIndex = columnData.indexOf(COL_VALUE_JSON); // Fetch the tag indices
+                jsonValueIndex = columnData.indexOf(COL_VALUE_JSON);
+                mixedValueIndex = columnData.indexOf(COL_VALUE_MIXED); // Fetch the tag indices
 
                 csvTagIndex = columnData.indexOf(COL_TAGS_CSV);
                 singleTagIndex = columnData.indexOf(COL_TAG_STRING); // Fetch the next property indices
@@ -505,10 +520,10 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                 nextJSONIndex = columnData.indexOf(COL_NEXT_JSON); // Normalize the indicies based on searched data
 
                 weightIndex = columnData.indexOf(COL_WEIGHT);
-                valueIndex = ~stringValueIndex ? stringValueIndex : jsonValueIndex;
+                valueIndex = ~stringValueIndex ? stringValueIndex : ~mixedValueIndex ? mixedValueIndex : jsonValueIndex;
                 tagIndex = ~csvTagIndex ? csvTagIndex : ~singleTagIndex ? singleTagIndex : -1;
                 nextIndex = ~nextFileIndex ? nextFileIndex : nextJSONIndex;
-                _context2.next = 30;
+                _context2.next = 32;
                 return Promise.all(records.map( /*#__PURE__*/function () {
                   var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(record) {
                     var value, tags, weight, next, path;
@@ -516,7 +531,27 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                       while (1) {
                         switch (_context.prev = _context.next) {
                           case 0:
-                            value = ~valueIndex ? ~jsonValueIndex ? JSON.parse(record[valueIndex]) : record[valueIndex] : 'N/A Value';
+                            if (!~valueIndex) {
+                              _context.next = 9;
+                              break;
+                            }
+
+                            _context.t0 = valueIndex;
+                            _context.next = _context.t0 === jsonValueIndex ? 4 : _context.t0 === mixedValueIndex ? 6 : _context.t0 === stringValueIndex ? 8 : 8;
+                            break;
+
+                          case 4:
+                            value = tryParse(record[valueIndex]) || null;
+                            return _context.abrupt("break", 9);
+
+                          case 6:
+                            value = tryParse(record[valueIndex]) || record[valueIndex];
+                            return _context.abrupt("break", 9);
+
+                          case 8:
+                            value = record[valueIndex];
+
+                          case 9:
                             tags = ~tagIndex ? ~csvTagIndex ? record[tagIndex].trim().split(',').map(function (tag) {
                               return tag.trim();
                             }) : [record[tagIndex]] : [STD_WEIGHT];
@@ -524,39 +559,39 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                             next = null;
 
                             if (!~nextIndex) {
-                              _context.next = 15;
+                              _context.next = 23;
                               break;
                             }
 
                             if (!~nextFileIndex) {
-                              _context.next = 13;
+                              _context.next = 21;
                               break;
                             }
 
                             if (!record[nextIndex]) {
-                              _context.next = 11;
+                              _context.next = 19;
                               break;
                             }
 
                             path = _path["default"].isAbsolute(record[nextIndex]) ? record[nextIndex] : _path["default"].join(_path["default"].dirname(pathToFile), record[nextIndex]);
-                            _context.next = 10;
+                            _context.next = 18;
                             return Random.fromCSVFile(path, nextColumnData || columnData);
 
-                          case 10:
+                          case 18:
                             next = _context.sent;
 
-                          case 11:
-                            _context.next = 15;
+                          case 19:
+                            _context.next = 23;
                             break;
 
-                          case 13:
+                          case 21:
                             next = JSON.parse(record[nextIndex]);
 
                             if (/object Object/.test(Object.prototype.toString.call(next))) {
                               next = next.list || null;
                             }
 
-                          case 15:
+                          case 23:
                             return _context.abrupt("return", {
                               value: value,
                               tags: tags,
@@ -564,7 +599,7 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                               next: next
                             });
 
-                          case 16:
+                          case 24:
                           case "end":
                             return _context.stop();
                         }
@@ -577,19 +612,19 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                   };
                 }()));
 
-              case 30:
+              case 32:
                 records = _context2.sent;
                 return _context2.abrupt("return", _construct(Random, _toConsumableArray(records)));
 
-              case 32:
+              case 34:
                 return _context2.abrupt("return", null);
 
-              case 33:
+              case 35:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, null, [[8, 14]]);
+        }, _callee2, null, [[9, 15]]);
       }));
 
       function fromCSVFile(_x) {
@@ -974,9 +1009,13 @@ var COL_VALUE_STRING = Symbol('Column represents string values');
 
 exports.COL_VALUE_STRING = COL_VALUE_STRING;
 var COL_VALUE_JSON = Symbol('Column represents parseable JSON');
-/** Indicates the column in question is a CSV string of tags to apply */
+/** Indicates the column in question is either JSON or a raw String */
 
 exports.COL_VALUE_JSON = COL_VALUE_JSON;
+var COL_VALUE_MIXED = Symbol('Column represents string or JSON value');
+/** Indicates the column in question is a CSV string of tags to apply */
+
+exports.COL_VALUE_MIXED = COL_VALUE_MIXED;
 var COL_TAGS_CSV = Symbol('Column represents CSV as string tag names');
 /** Indicates the column in question is a string whose value is a tag */
 
@@ -992,18 +1031,19 @@ var COL_NEXT_FILEPATH = Symbol('Column represents a path to a CSV file for a lin
 /** Default set of columns for use with Random.fromCSV() */
 
 exports.COL_NEXT_FILEPATH = COL_NEXT_FILEPATH;
-var COLS_DEFAULT = [COL_WEIGHT, COL_VALUE_STRING, COL_TAGS_CSV];
+var COLS_DEFAULT = [COL_WEIGHT, COL_VALUE_MIXED, COL_TAGS_CSV];
 /** Default set of columns for nested tables when using Random.fromCSV() */
 
 exports.COLS_DEFAULT = COLS_DEFAULT;
-var COLS_NESTED = [COL_WEIGHT, COL_VALUE_STRING, COL_NEXT_FILEPATH];
-/** 
- * Default set of columns for nested tables and complex values for use
- * with Random.fromCSV()
- */
+var COLS_NESTED = [COL_WEIGHT, COL_VALUE_MIXED, COL_NEXT_FILEPATH];
+/** Set of columns with strict string values */
 
 exports.COLS_NESTED = COLS_NESTED;
-var COLS_NESTED_OBJ = [COL_WEIGHT, COL_VALUE_JSON, COL_NEXT_FILEPATH];
+var COLS_STRING_VALUES = [COL_WEIGHT, COL_VALUE_STRING, COL_TAGS_CSV];
+/** Set of columns with strict JSON only values */
+
+exports.COLS_STRING_VALUES = COLS_STRING_VALUES;
+var COLS_JSON_VALUES = [COL_WEIGHT, COL_VALUE_JSON, COL_TAGS_CSV];
 /** 
  * Indicates the column in question is a JSON string to be constructed 
  * and passed as args to `new Random()`. Note this means that if an array
@@ -1012,7 +1052,7 @@ var COLS_NESTED_OBJ = [COL_WEIGHT, COL_VALUE_JSON, COL_NEXT_FILEPATH];
  * whose contents will be supplied to `new Random(listPropertyContents)`
  */
 
-exports.COLS_NESTED_OBJ = COLS_NESTED_OBJ;
+exports.COLS_JSON_VALUES = COLS_JSON_VALUES;
 var COL_NEXT_JSON = Symbol('Column represents JSON data for a new Random');
 /**
  * Deconstructs a `Symbol` generated using `GEN_RANGE` and returns an
