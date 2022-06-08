@@ -1,0 +1,7 @@
+20,Sword,./Swords.csv
+20,Weapon/Armor,./WeaponArmor.csv
+25,Potion,./Potions.csv
+20,Scroll,./Scrolls.csv
+5,Ring,./Rings.csv
+5,Wand/Staff/Rod,./WandsStavesRods.csv
+5,Miscellaneous Magic,./MiscellaneousMagic.csv

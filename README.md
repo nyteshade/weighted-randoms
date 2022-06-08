@@ -10,6 +10,8 @@ The library accomplishes this without wasting memory with large gaps and is flex
 
 ## TODO
 
+1.2.x and previous versions
+
 - [ ] Explain `new Random()`
 - [ ] Explain `new Random().generate()`
 - [ ] Explain `new Random().one()`
@@ -32,6 +34,10 @@ The library accomplishes this without wasting memory with large gaps and is flex
 - [ ] Explain `Random.from()`
 - [ ] Explain `Random.item()`
 - [ ] Explain `new Item()`
+
+1.3.x
+
+- [ ] Explain `Random.fromCSVFile()`
 
 ## New Features
 As of 1.2.x, the ability to chain a random item selection from subsequent instances of `Random` has been added. This is done by adding a `.next` property to an item in a `Random` instance list. If `.next` is truthy and an instance of `Random` then a loop is created where `.next.one()` is called until the resulting value is no longer an instance of `Random` or is falsey. 
@@ -116,3 +122,21 @@ If an item is chosen that has a `.next` value, it has its `.one()` function invo
 Once a final item is chosen, if the original item had a `.postProcess()` function property, it is invoked with the chosen item value. The `.postProcess()` function property takes the chosen item and returns an item; usually a modified version of the previously chosen item.
 
 In the `DnDBasicRulesMagic.js` example, values from the "Rings" and "Potions" tables list effects. It would be unclear if it were a Potion or a Ring unless we prepend the text "Ring of " or "Potion of ", respectively. So a `.postProcess()` function is added to the top level choice for Rings and Potions that prepends the text to whatever item was eventually selected, solving this problem.
+
+## CSV Files
+
+In 1.3.x the ability to read tables, including nested tables, from CSV files has been added. The sample files, an equivalent to the purely JS created version, is available in the repl as `csvSample`. The csv files themselves are located in the src/CSV. An absolute path is required for the parameter to `Random.fromCSVFile()`, however, if `COLS_NESTED` or `COLS_NESTED_OBJ` are supplied the paths in those columns can be relative to the first file. This is how the sample is setup to be. 
+
+An example of the first file mentioned above looks like this:
+
+```json
+20,"Sword","./Swords.csv"
+20,"Weapon/Armor","./WeaponArmor.csv"
+25,"Potion","./Potions.csv"
+20,"Scroll","./Scrolls.csv"
+5,"Ring","./Rings.csv"
+5,"Wand/Staff/Rod","./WandsStavesRods.csv"
+5,"Miscellaneous Magic","./MiscellaneousMagic.csv"
+```
+
+An instance of Random is created and during this creation, the process will recursively traverse the specified files and build `.next` links to subsequent items.

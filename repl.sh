@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 
-const repl = require('node:repl')
-const library = require('./dist')
+(async function() {
+  const repl = require('node:repl')
+  const library = require('./dist')
 
-Object.assign(global, library)
+  const csvSample = await library.Random.fromCSVFile(
+    './src/examples/CSV/GeneralMagicItems.csv',
+    library.COLS_NESTED
+  )
 
-repl.start({
-  prompt: '> ',
-  useColors: true,
-  useGlobal: true,
-})
+  Object.assign(global, library, { csvSample })
+
+  repl.start({
+    prompt: '> ',
+    useColors: true,
+    useGlobal: true,
+  })
+})()
+

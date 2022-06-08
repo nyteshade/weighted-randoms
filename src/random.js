@@ -1,11 +1,15 @@
 import { Item } from './item'
 import { provideGetter, numericSort, isNumber } from './asArray'
+import { parse } from 'csv-parse'
+import FS from 'fs'
+import Path from 'path'
+import { promisify } from 'util'
 
 /**
  * Random is quick class that expertly handles weighted randoms in your code
  * in an efficient way. It supports objects that sport
  */
-class Random {
+export class Random {
   /**
    * Creates a new instance of Random which can be used to generate a random
    * selection from the choices it is aware of. Each choice can be weighted
@@ -261,6 +265,122 @@ class Random {
    */
   static from(...args) {
     return new Random(...args).one()
+  }
+
+  /**
+   * Sometimes it is easier to lay out data as a stream of CSV, or comma
+   * separated values. Since the 
+   * 
+   * @param {String} pathToFile string denoting the path to the CSV file
+   * containing the data to use to construct the Random() instance.
+   * @param {Array<Symbol>} columnData an ordered array of predefined Symbol 
+   * constants indicating which data should exist for each column and what
+   * format to expect. An example might look like
+   * ```
+   *   20,"20% chance of Rain","WEATHER,DEF_STD_WEIGHT"
+   * ```
+   * @param {Array<Symbol>} nextColumnData if this value is null, the primary
+   * `columnData` value will be used. Otherwise this arrangement will be used
+   * when parsing the COL_NEXT_FILE values.
+   */
+  static async fromCSVFile(
+    pathToFile, 
+    columnData = COLS_DEFAULT, 
+    nextColumnData = null,
+    skipFirstLine = false
+  ) {
+    const options = { 
+      delimeter: ',', 
+      skipEmptyLines: true, 
+      comment: '#',
+      from_line: skipFirstLine ? 2 : 1
+    }
+    
+    if (FS.existsSync(pathToFile)) {
+      // Read the contents of the specified CSV file and parse
+      // the CSV into an array of records
+      let contents = await promisify(FS.readFile)(pathToFile)
+      let records
+      
+      try { records = await promisify(parse)(contents, options) }
+      catch (e) { /* Ignored */ }
+
+      if (!records) { 
+        return null
+      }
+
+      // Determine which columns were specified for values, tags and weight
+      // Fetch the value indices
+      let stringValueIndex = columnData.indexOf(COL_VALUE_STRING)
+      let jsonValueIndex = columnData.indexOf(COL_VALUE_JSON)
+
+      // Fetch the tag indices
+      let csvTagIndex = columnData.indexOf(COL_TAGS_CSV)
+      let singleTagIndex = columnData.indexOf(COL_TAG_STRING)
+
+      // Fetch the next property indices
+      let nextFileIndex = columnData.indexOf(COL_NEXT_FILEPATH)
+      let nextJSONIndex = columnData.indexOf(COL_NEXT_JSON)
+
+      // Normalize the indicies based on searched data
+      let weightIndex = columnData.indexOf(COL_WEIGHT)
+      let valueIndex = ~stringValueIndex ? stringValueIndex : jsonValueIndex
+      let tagIndex = ~csvTagIndex 
+        ? csvTagIndex 
+        : (~singleTagIndex ? singleTagIndex : -1)
+      let nextIndex = ~nextFileIndex ? nextFileIndex : nextJSONIndex
+
+      records = await Promise.all(records.map(async (record) => {
+        let value = ~valueIndex
+          ? (~jsonValueIndex 
+              ? JSON.parse(record[valueIndex]) 
+              : record[valueIndex]
+            )
+          : 'N/A Value'
+
+        let tags = ~tagIndex
+          ? (~csvTagIndex
+              ? record[tagIndex].trim().split(',').map(tag => tag.trim())
+              : [record[tagIndex]]
+            )
+          : [ STD_WEIGHT ]
+
+        let weight = ~weightIndex 
+          ? Number(record[weightIndex]) 
+          : DEF_STD_WEIGHT
+
+        let next = null 
+
+        if (~nextIndex) {
+          if (~nextFileIndex) {
+            if (record[nextIndex]) {
+              let path = Path.isAbsolute(record[nextIndex])
+                ? record[nextIndex]
+                : Path.join(Path.dirname(pathToFile), record[nextIndex])
+
+              next = await Random.fromCSVFile(
+                path, 
+                nextColumnData || columnData
+              )
+            }
+          }
+          else {
+            next = JSON.parse(record[nextIndex])
+
+            if (/object Object/.test(Object.prototype.toString.call(next))) {
+              next = next.list || null
+            }
+          }
+        }
+
+        // Reorder the data to the format that `new Random()` expects
+        return { value, tags, weight, next }
+      }))
+
+      return new Random(...records)
+    }
+
+    return null;
   }
 
   /**
@@ -564,14 +684,70 @@ class Random {
 }
 
 /** Standard default weight value used through code for new items */
-const DEF_STD_WEIGHT = new Number(1)
+export const DEF_STD_WEIGHT = new Number(1)
 
 /** A constant symbol used as a tag for standard weight items */
-const STD_WEIGHT = Symbol('Standard Default Random Item Weight')
+export const STD_WEIGHT = Symbol('Standard Default Random Item Weight')
 
 /** A generated symbol applied to addRange(...) items */
-const GEN_RANGE = (from, to) => Symbol.for(
+export const GEN_RANGE = (from, to) => Symbol.for(
   `Generated Range Item from ${from} to ${to}`
+)
+
+/**
+ * When employing Random.fromCSV(), one of the arguments required
+ * is the layout of columns and how to work with them. Below are some
+ * constants to help that definition.
+ */
+
+/** Indicates the column in question is a number representing weight */
+export const COL_WEIGHT = Symbol('Column represents numerical weight')
+
+/** Indicates the column in question is a string representing value */
+export const COL_VALUE_STRING = Symbol('Column represents string values')
+
+/** Indicates the column in question is a JSON string to be constructed */
+export const COL_VALUE_JSON = Symbol('Column represents parseable JSON')
+
+/** Indicates the column in question is a CSV string of tags to apply */
+export const COL_TAGS_CSV = Symbol('Column represents CSV as string tag names')
+
+/** Indicates the column in question is a string whose value is a tag */
+export const COL_TAG_STRING = Symbol('Column representing a single tag string')
+
+/** 
+ * Indicates the column in question is a file path string to a CSV file
+ * that should be converted to a live Random instance.
+ */
+export const COL_NEXT_FILEPATH = Symbol(
+  'Column represents a path to a CSV file for a linked Random'
+)
+
+/** Default set of columns for use with Random.fromCSV() */
+export const COLS_DEFAULT = [ COL_WEIGHT, COL_VALUE_STRING, COL_TAGS_CSV ]
+
+/** Default set of columns for nested tables when using Random.fromCSV() */
+export const COLS_NESTED = [ COL_WEIGHT, COL_VALUE_STRING, COL_NEXT_FILEPATH ]
+
+/** 
+ * Default set of columns for nested tables and complex values for use
+ * with Random.fromCSV()
+ */
+export const COLS_NESTED_OBJ = [ 
+  COL_WEIGHT, 
+  COL_VALUE_JSON, 
+  COL_NEXT_FILEPATH 
+]
+
+/** 
+ * Indicates the column in question is a JSON string to be constructed 
+ * and passed as args to `new Random()`. Note this means that if an array
+ * is supplied, it will be used as params via `new Random(...JSON.parse(val))`
+ * whereas if it is an object, the object should contain a list property
+ * whose contents will be supplied to `new Random(listPropertyContents)`
+ */
+export const COL_NEXT_JSON = Symbol(
+  'Column represents JSON data for a new Random'
 )
 
 /**
@@ -584,9 +760,10 @@ const GEN_RANGE = (from, to) => Symbol.for(
  * @return {Array<Number>} an array of two values used in the original
  * call to GEN_RANGE.
  */
-const GEN_RANGE_VALS = (symbol) =>
+export const GEN_RANGE_VALS = (symbol) =>
   Array.from(/.*(\b\d+\b).*(\b\d+\b)/.exec(symbol.toString())).slice(1)
 
+/*
 module.exports = {
   default: Random,
 
@@ -599,4 +776,16 @@ module.exports = {
   DEF_STD_WEIGHT,
   GEN_RANGE,
   GEN_RANGE_VALS,
+
+  COLS_DEFAULT,
+  COLS_DEFAULT_OBJ,
+  COLS_NESTED,
+  COL_WEIGHT,
+  COL_VALUE_STRING,
+  COL_VALUE_JSON,
+  COL_TAGS_CSV,
+  COL_TAG_STRING,
+  COL_NEXT_FILEPATH,
+  COL_NEXT_JSON,
 }
+*/
