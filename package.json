@@ -29,6 +29,6 @@
     "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
-    "csv": "^6.1.0"
+    "csv": "^6.1.2"
   }
 }
