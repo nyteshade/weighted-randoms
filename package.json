@@ -1,6 +1,6 @@
 {
   "name": "weighted-randoms",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "A simple lightweight class designed for working with weighted randoms",
   "main": "dist/index.js",
   "scripts": {
