@@ -338,6 +338,7 @@ export class Random {
         ? csvTagIndex 
         : (~singleTagIndex ? singleTagIndex : -1)
       let nextIndex = ~nextFileIndex ? nextFileIndex : nextJSONIndex
+      let postProcessIndex = columnData.indexOf(COL_POST_PROCESS)
 
       records = await Promise.all(records.map(async (record) => {
         let value 
@@ -392,8 +393,13 @@ export class Random {
           }
         }
 
+        let postProcess = null
+        if (~postProcessIndex) {
+          postProcess = eval(`(function(record){ ${record[postProcessIndex]} })`)
+        }
+
         // Reorder the data to the format that `new Random()` expects
-        return { value, tags, weight, next }
+        return { value, tags, weight, next, postProcess }
       }))
 
       return new Random(...records)
@@ -736,6 +742,10 @@ export const COL_TAGS_CSV = Symbol('Column represents CSV as string tag names')
 
 /** Indicates the column in question is a string whose value is a tag */
 export const COL_TAG_STRING = Symbol('Column representing a single tag string')
+
+export const COL_POST_PROCESS = Symbol(
+  'Column represents function body w/record as passed param'
+)
 
 /** 
  * Indicates the column in question is a file path string to a CSV file
