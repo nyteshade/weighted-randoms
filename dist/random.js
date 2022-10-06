@@ -5,7 +5,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.STD_WEIGHT = exports.Random = exports.GEN_RANGE_VALS = exports.GEN_RANGE = exports.DEF_STD_WEIGHT = exports.COL_WEIGHT = exports.COL_VALUE_STRING = exports.COL_VALUE_MIXED = exports.COL_VALUE_JSON = exports.COL_TAG_STRING = exports.COL_TAGS_CSV = exports.COL_NEXT_JSON = exports.COL_NEXT_FILEPATH = exports.COLS_STRING_VALUES = exports.COLS_NESTED = exports.COLS_JSON_VALUES = exports.COLS_DEFAULT = void 0;
+exports.STD_WEIGHT = exports.Random = exports.GEN_RANGE_VALS = exports.GEN_RANGE = exports.DEF_STD_WEIGHT = exports.COL_WEIGHT = exports.COL_VALUE_STRING = exports.COL_VALUE_MIXED = exports.COL_VALUE_JSON = exports.COL_TAG_STRING = exports.COL_TAGS_CSV = exports.COL_POST_PROCESS = exports.COL_NEXT_JSON = exports.COL_NEXT_FILEPATH = exports.COLS_STRING_VALUES = exports.COLS_NESTED = exports.COLS_JSON_VALUES = exports.COLS_DEFAULT = void 0;
 
 var _item2 = require("./item");
 
@@ -450,6 +450,7 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
             valueIndex,
             tagIndex,
             nextIndex,
+            postProcessIndex,
             _args2 = arguments;
         return _regeneratorRuntime().wrap(function _callee2$(_context2) {
           while (1) {
@@ -466,7 +467,7 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                 };
 
                 if (!_fs["default"].existsSync(pathToFile)) {
-                  _context2.next = 34;
+                  _context2.next = 35;
                   break;
                 }
 
@@ -523,10 +524,11 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                 valueIndex = ~stringValueIndex ? stringValueIndex : ~mixedValueIndex ? mixedValueIndex : jsonValueIndex;
                 tagIndex = ~csvTagIndex ? csvTagIndex : ~singleTagIndex ? singleTagIndex : -1;
                 nextIndex = ~nextFileIndex ? nextFileIndex : nextJSONIndex;
-                _context2.next = 32;
+                postProcessIndex = columnData.indexOf(COL_POST_PROCESS);
+                _context2.next = 33;
                 return Promise.all(records.map( /*#__PURE__*/function () {
                   var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(record) {
-                    var value, tags, weight, next, path;
+                    var value, tags, weight, next, path, postProcess;
                     return _regeneratorRuntime().wrap(function _callee$(_context) {
                       while (1) {
                         switch (_context.prev = _context.next) {
@@ -592,14 +594,22 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                             }
 
                           case 23:
+                            postProcess = null;
+
+                            if (~postProcessIndex) {
+                              postProcess = eval("(function(record){ ".concat(record[postProcessIndex], " })"));
+                            } // Reorder the data to the format that `new Random()` expects
+
+
                             return _context.abrupt("return", {
                               value: value,
                               tags: tags,
                               weight: weight,
-                              next: next
+                              next: next,
+                              postProcess: postProcess
                             });
 
-                          case 24:
+                          case 26:
                           case "end":
                             return _context.stop();
                         }
@@ -612,14 +622,14 @@ var Random = /*#__PURE__*/function (_Symbol$toStringTag) {
                   };
                 }()));
 
-              case 32:
+              case 33:
                 records = _context2.sent;
                 return _context2.abrupt("return", _construct(Random, _toConsumableArray(records)));
 
-              case 34:
+              case 35:
                 return _context2.abrupt("return", null);
 
-              case 35:
+              case 36:
               case "end":
                 return _context2.stop();
             }
@@ -1021,12 +1031,14 @@ var COL_TAGS_CSV = Symbol('Column represents CSV as string tag names');
 
 exports.COL_TAGS_CSV = COL_TAGS_CSV;
 var COL_TAG_STRING = Symbol('Column representing a single tag string');
+exports.COL_TAG_STRING = COL_TAG_STRING;
+var COL_POST_PROCESS = Symbol('Column represents function body w/record as passed param');
 /** 
  * Indicates the column in question is a file path string to a CSV file
  * that should be converted to a live Random instance.
  */
 
-exports.COL_TAG_STRING = COL_TAG_STRING;
+exports.COL_POST_PROCESS = COL_POST_PROCESS;
 var COL_NEXT_FILEPATH = Symbol('Column represents a path to a CSV file for a linked Random');
 /** Default set of columns for use with Random.fromCSV() */
 
